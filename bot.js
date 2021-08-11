@@ -1,7 +1,6 @@
 const { Markup, Telegraf } = require("telegraf");
 const axios = require("axios");
 const fs = require("fs");
-const pptr = require("puppeteer-core");
 const youtubedl = require("youtube-dl");
 require("dotenv").config();
 
@@ -10,8 +9,8 @@ const bot = new Telegraf(process.env.BOT_API);
 bot.start(async (ctx) => {
   await ctx.telegram.setMyCommands([
     {
-      command: "/takephoto",
-      description: "Toma capture a un sitio web",
+      command: "/users",
+      description: "Trae usuarios de una api y los muestra",
     },
     {
       command: "/downloadvideo",
@@ -41,25 +40,6 @@ bot.command("users", (ctx) => {
       ctx.reply(user.name);
     })
   );
-});
-
-bot.command("takephoto", (ctx) => {
-  ctx.reply("Ingresa la url de la web a la que le deseas tomar una photo");
-  bot.on("text", (context) => {
-    pptr.launch().then((browser) => {
-      browser.newPage().then((page) =>
-        page.goto(context.message.text).then(() =>
-          page.screenshot({ path: "screen.jpg" }).then(() =>
-            browser.close().then(() =>
-              context.replyWithPhoto({
-                source: fs.createReadStream("./screen.jpg"),
-              })
-            )
-          )
-        )
-      );
-    });
-  });
 });
 
 const keyboard = Markup.inlineKeyboard([
