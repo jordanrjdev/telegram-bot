@@ -5,7 +5,7 @@ const pptr = require("puppeteer");
 const youtubedl = require("youtube-dl");
 require("dotenv").config();
 
-const bot = new Telegraf();
+const bot = new Telegraf(process.env.BOT_API);
 
 bot.start(async (ctx) => {
   await ctx.telegram.setMyCommands([
@@ -86,7 +86,7 @@ bot.command("getimage", (ctx) => {
 
 bot.command("generatepassword", (ctx) => {
   let r = Math.random().toString(36);
-  ctx.reply(`Contraseña generada${r}`);
+  ctx.reply(`Contraseña generada : ${r}`);
 });
 
 bot.command("downloadvideo", (ctx) => {
