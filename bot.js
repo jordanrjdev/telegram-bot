@@ -46,19 +46,24 @@ bot.command("users", (ctx) => {
 bot.command("takephoto", (ctx) => {
   ctx.reply("Ingresa la url de la web a la que le deseas tomar una photo");
   bot.on("text", (context) => {
-    pptr.launch().then((browser) => {
-      browser.newPage().then((page) =>
-        page.goto(context.message.text).then(() =>
-          page.screenshot({ path: "screen.jpg" }).then(() =>
-            browser.close().then(() =>
-              context.replyWithPhoto({
-                source: fs.createReadStream("./screen.jpg"),
-              })
+    pptr
+      .launch({
+        headless: true,
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      })
+      .then((browser) => {
+        browser.newPage().then((page) =>
+          page.goto(context.message.text).then(() =>
+            page.screenshot({ path: "screen.jpg" }).then(() =>
+              browser.close().then(() =>
+                context.replyWithPhoto({
+                  source: fs.createReadStream("./screen.jpg"),
+                })
+              )
             )
           )
-        )
-      );
-    });
+        );
+      });
   });
 });
 
