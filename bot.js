@@ -98,10 +98,5 @@ bot.command("downloadvideo", (ctx) => {
 });
 
 bot.launch();
-process.on("uncaughtException", function (error) {
-  console.log("\x1b[31m", "Exception: ", error, "\x1b[0m");
-});
-
-process.on("unhandledRejection", function (error, p) {
-  console.log("\x1b[31m", "Error: ", error.message, "\x1b[0m");
-});
+process.once("SIGINT", () => bot.stop("SIGINT"));
+process.once("SIGTERM", () => bot.stop("SIGTERM"));

@@ -4,5 +4,5 @@ Este bot tiene las siguientes opciones
 
 - Descargar videos de youtube (Beta)
 - Generar contraseñas aleatorias
-- Tomar fotos a sitios web (Beta)
+- Obtener usuarios de un sitio
 - Obtener imagenes aleatorias
