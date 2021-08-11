@@ -1,7 +1,7 @@
 const { Markup, Telegraf } = require("telegraf");
 const axios = require("axios");
 const fs = require("fs");
-const pptr = require("puppeteer");
+const pptr = require("puppeteer-core");
 const youtubedl = require("youtube-dl");
 require("dotenv").config();
 
