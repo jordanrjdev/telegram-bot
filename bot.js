@@ -46,6 +46,7 @@ const keyboard = Markup.inlineKeyboard([
   Markup.button.url("Portafolio", "https://nadrojdev.xyz"),
   Markup.button.url("Instagram", "https://instagram.com/vednadroj"),
 ]);
+
 bot.help(async (ctx) => {
   const commands = await ctx.telegram.getMyCommands();
   const info = commands.reduce(
@@ -70,30 +71,75 @@ bot.command("generatepassword", (ctx) => {
 });
 
 bot.command("downloadvideo", (ctx) => {
-  ctx.reply("Ingresa la url del video que deseas descargar");
-  bot.on("text", (context) => {
-    const video = youtubedl(
-      context.message.text,
-      // Optional arguments passed to youtube-dl.
-      ["--format=18"],
-      // Additional options can be given for calling `child_process.execFile()`.
-      { cwd: __dirname }
+  ctx.reply(
+    "En que formato deseas descargarlo?",
+    Markup.inlineKeyboard([
+      Markup.button.callback("MP4", "mp4"),
+      Markup.button.callback("MP3", "mp3"),
+    ])
+  );
+});
+
+function descargarVideo(url) {
+  return new Promise((resolve, reject) => {
+    youtubedl.exec(
+      url,
+      ["-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]"],
+      {},
+      function exec(err, output) {
+        "use strict";
+        if (!err) {
+          console.log(output[2].split("] ")[1].split(".mp4")[0] + ".mp4");
+          resolve(output[2].split("] ")[1].split(".mp4")[0] + ".mp4");
+        }
+        reject(err);
+      }
     );
-    // Will be called when the download starts.
-    video.on("info", function (info) {
-      context.reply("Download started ", info._filename);
-    });
-    video.pipe(fs.createWriteStream(context.from.first_name + ".mp4"));
+  });
+}
 
-    video.on("complete", function complete(info) {
-      context.reply("filename: " + info._filename + " already downloaded.");
-    });
+function descargarMusica(url) {
+  return new Promise((resolve, reject) => {
+    youtubedl.exec(
+      url,
+      ["-x", "--audio-format", "mp3"],
+      {},
+      function exec(err, output) {
+        if (!err) {
+          resolve(output[4].split("Destination: ")[1]);
+        }
+        reject(err);
+      }
+    );
+  });
+}
 
-    video.on("end", function () {
-      context.replyWithVideo({
-        source: fs.readFileSync(context.from.first_name + ".mp4"),
+bot.action("mp3", (ctx) => {
+  ctx.reply("Ingresa la url del video de yt");
+  bot.on("text", async (context) => {
+    try {
+      context.reply("Iniciando la descarga por favor espere");
+      let desca = await descargarMusica(context.message.text);
+      context.replyWithAudio({
+        source: desca,
       });
-    });
+    } catch (err) {
+      context.reply(err.stderr);
+    }
+  });
+});
+bot.action("mp4", (ctx) => {
+  ctx.reply("Ingresa la url del video que deseas descargar");
+  bot.on("text", async (context) => {
+    try {
+      context.reply("Iniciando la descarga por favor espere");
+      const descarga = await descargarVideo(context.message.text);
+      context.replyWithVideo({
+        source: fs.readFileSync(descarga),
+      });
+    } catch (err) {
+      context.reply(err.stderr);
+    }
   });
 });
 
