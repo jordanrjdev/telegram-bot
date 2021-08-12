@@ -2,6 +2,7 @@ const { Markup, Telegraf } = require("telegraf");
 const axios = require("axios");
 const fs = require("fs");
 const youtubedl = require("youtube-dl");
+const ffmpeg = require("ffmpeg");
 require("dotenv").config();
 
 const bot = new Telegraf(process.env.BOT_API);
@@ -80,65 +81,78 @@ bot.command("downloadvideo", (ctx) => {
   );
 });
 
-function descargarVideo(url) {
+function descargarVideo(url, name) {
   return new Promise((resolve, reject) => {
-    youtubedl.exec(
-      url,
-      ["-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]"],
-      {},
-      function exec(err, output) {
-        "use strict";
-        if (!err) {
-          console.log(output[2].split("] ")[1].split(".mp4")[0] + ".mp4");
-          resolve(output[2].split("] ")[1].split(".mp4")[0] + ".mp4");
-        }
-        reject(err);
-      }
-    );
+    const video = youtubedl(url, ["--format=18"], { cwd: __dirname });
+    video.pipe(fs.createWriteStream(name + ".mp4"));
+    video.on("end", function () {
+      resolve(true);
+    });
+    video.on("error", function (err) {
+      reject(err);
+    });
   });
 }
-
-function descargarMusica(url) {
-  return new Promise((resolve, reject) => {
-    youtubedl.exec(
-      url,
-      ["-x", "--audio-format", "mp3"],
-      {},
-      function exec(err, output) {
-        if (!err) {
-          resolve(output[4].split("Destination: ")[1]);
-        }
-        reject(err);
-      }
-    );
-  });
-}
-
 bot.action("mp3", (ctx) => {
   ctx.reply("Ingresa la url del video de yt");
   bot.on("text", async (context) => {
     try {
-      context.reply("Iniciando la descarga por favor espere");
-      let desca = await descargarMusica(context.message.text);
-      context.replyWithAudio({
-        source: fs.readFileSync(desca),
-      });
+      let desc = await descargarVideo(
+        context.message.text,
+        context.from.first_name
+      );
+      if (desc) {
+        let process = new ffmpeg(context.from.first_name + ".mp4");
+        process.then(
+          function (video) {
+            video.fnExtractSoundToMP3(
+              context.from.first_name + ".mp3",
+              function (error, file) {
+                console.log(error, file);
+                if (!error) {
+                  context.replyWithAudio({
+                    source: fs.readFileSync(context.from.first_name + ".mp3"),
+                  });
+                } else {
+                  context.reply("Hubo un error" + error);
+                }
+              }
+            );
+          },
+          function (err) {
+            context.reply(err);
+          }
+        );
+      } else {
+        context.reply("Error al descargar el mp3");
+      }
     } catch (err) {
-      context.reply(err.stderr);
+      console.log(err);
+      context.reply("Error al descargar el mp3");
+      context.reply("Error : ", err);
     }
   });
 });
+
 bot.action("mp4", (ctx) => {
   ctx.reply("Ingresa la url del video que deseas descargar");
   bot.on("text", async (context) => {
     try {
-      context.reply("Iniciando la descarga por favor espere");
-      const descarga = await descargarVideo(context.message.text);
-      context.replyWithVideo({
-        source: fs.readFileSync(descarga),
-      });
+      let desc = await descargarVideo(
+        context.message.text,
+        context.from.first_name
+      );
+      if (desc) {
+        context.replyWithVideo({
+          source: fs.readFileSync(context.from.first_name + ".mp4"),
+        });
+      } else {
+        context.reply("Hubo un error intenta de nuevo");
+      }
     } catch (err) {
-      context.reply(err.stderr);
+      console.log(err);
+      context.reply("Hubo un error intenta de nuevo");
+      context.reply("Error : ", err);
     }
   });
 });
