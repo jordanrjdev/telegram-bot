@@ -121,7 +121,7 @@ bot.action("mp3", (ctx) => {
       context.reply("Iniciando la descarga por favor espere");
       let desca = await descargarMusica(context.message.text);
       context.replyWithAudio({
-        source: desca,
+        source: fs.readFileSync(desca),
       });
     } catch (err) {
       context.reply(err.stderr);
